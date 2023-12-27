@@ -1,0 +1,25 @@
+# Maintainer: Putin Lee <putin.li@rock-chips.com>
+# Maintainer: Malachi Xu <w568w at outlook dot com>
+
+pkgname=libmali-bifrost-g52-g13p0-x11-gbm
+pkgver=1.9
+pkgrel=1
+pkgdesc="Mali GPU User-Space Binary Drivers"
+arch=('aarch64')
+url="https://github.com/rockchip-linux/libmali"
+license=('custom')
+depends=('glibc>=2.17' 'libdrm>=2.3.1' 'gcc' 'libx11' 'libxcb')
+conflicts=('libmali')
+replaces=('libmali')
+provides=('libmali')
+source_aarch64=("https://github.com/orangepi-xunlong/rk-rootfs-build/raw/rk356x_packages/common/libmali/libmali-bifrost-g52-g13p0-x11-gbm_${pkgver}-${pkgrel}_arm64.deb")
+md5sums_aarch64=('SKIP')
+
+package() {
+  cd "$srcdir" || exit 1
+  bsdtar -xf "${srcdir}"/data.tar.xz -C "${pkgdir}"/
+  # fix libmali.so which is not in load library path by default
+  echo "/usr/lib/aarch64-linux-gnu/" >> "${pkgdir}"/etc/ld.so.conf.d/00-aarch64-mali.conf
+  chown root:root -vR "${pkgdir}/"
+  chmod 755 -vR "${pkgdir}/"
+}
