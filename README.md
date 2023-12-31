@@ -46,7 +46,10 @@ You may want to cross-build it on a x86_64 machine with following options:
 $ makepkg --syncdeps --config makepkg.conf
 ```
 
-RKNPU driver is migrated by myself from downstream kernels [rockchip-linux/kernel](https://github.com/rockchip-linux/kernel/tree/develop-5.10) and [orangepi-xunlong/linux-orangepi](https://github.com/orangepi-xunlong/linux-orangepi/blob/orange-pi-5.10-rk35xx/). A lot of changes and polyfills are made to make it work properly. **It is quite experimental and may not work on your device; you have been warned.** In my case, power model is not working but it does not affect the functionality of NPU:
+RKNPU driver is migrated by myself from downstream kernels [rockchip-linux/kernel](https://github.com/rockchip-linux/kernel/tree/develop-5.10) and [orangepi-xunlong/linux-orangepi](https://github.com/orangepi-xunlong/linux-orangepi/blob/orange-pi-5.10-rk35xx/). A lot of changes and polyfills are made to make it work properly. **It is quite experimental and may not work on your device; you have been warned.** 
+
+##### Known Problems of RKNPU
+(1) In my case, power model is not working but it does not affect the functionality of NPU:
 
 ```
 [   23.948577] RKNPU fde40000.npu: deferred probe timeout, ignoring dependency
@@ -56,4 +59,14 @@ RKNPU driver is migrated by myself from downstream kernels [rockchip-linux/kerne
 [   23.960750] RKNPU fde40000.npu: avs=0
 [   23.961574] RKNPU fde40000.npu: RKNPU: failed to initialize power model
 [   23.961587] RKNPU fde40000.npu: RKNPU: failed to get dynamic-coefficient
+```
+
+(2) Only tasks submitted after the first initialization of RKNN Runtime can be executed. **Once the runtime is destroyed and created again, the NPU will not work anymore**:
+
+```
+[  605.159276] RKNPU: failed to wait job, task counter: 0, flags: 0x5, ret = 0, elapsed time: 6160643us
+[  605.267268] RKNPU: job timeout, flags: 0x0, irq status: 0x0, raw status: 0x0, require mask: 0x300, task counter: 0x0, elapsed time: 6268640us
+[  605.375257] RKNPU: soft reset
+[  607.915608] RKNPU: failed to wait job, task counter: 0, flags: 0x5, ret = -512, elapsed time: 2524485us
+[  608.023253] RKNPU: job abort, flags: 0x0, ret: -512, elapsed time: 2632132us
 ```
