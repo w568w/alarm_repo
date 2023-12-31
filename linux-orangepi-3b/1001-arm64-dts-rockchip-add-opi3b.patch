@@ -12,7 +12,7 @@ new file mode 100644
 index 0000000..0d385cf
 --- /dev/null
 +++ b/arch/arm64/boot/dts/rockchip/rk3566-orangepi-3b.dts
-@@ -0,0 +1,869 @@
+@@ -0,0 +1,884 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright (c) 2020 Rockchip Electronics Co., Ltd.
@@ -740,6 +740,21 @@ index 0000000..0d385cf
 +};
 +
 +&pwm7 {
++	status = "okay";
++};
++
++&bus_npu {
++	bus-supply = <&vdd_logic>;
++	pvtm-supply = <&vdd_cpu>;
++	status = "okay";
++};
++
++&rknpu {
++	rknpu-supply = <&vdd_npu>;
++	status = "okay";
++};
++
++&rknpu_mmu {
 +	status = "okay";
 +};
 +
