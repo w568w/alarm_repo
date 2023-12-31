@@ -61,7 +61,7 @@ RKNPU driver is migrated by myself from downstream kernels [rockchip-linux/kerne
 [   23.961587] RKNPU fde40000.npu: RKNPU: failed to get dynamic-coefficient
 ```
 
-(2) Only tasks submitted after the first initialization of RKNN Runtime can be executed. **Once the runtime is destroyed and created again, the NPU will not work anymore**:
+(2) Only tasks submitted after the first initialization of RKNN Runtime can be executed. **Once the runtime is created again, the NPU is likely not to work anymore until reboot.**
 
 ```
 [  605.159276] RKNPU: failed to wait job, task counter: 0, flags: 0x5, ret = 0, elapsed time: 6160643us
