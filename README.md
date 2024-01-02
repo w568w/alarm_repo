@@ -70,3 +70,6 @@ RKNPU driver is migrated by myself from downstream kernels [rockchip-linux/kerne
 [  607.915608] RKNPU: failed to wait job, task counter: 0, flags: 0x5, ret = -512, elapsed time: 2524485us
 [  608.023253] RKNPU: job abort, flags: 0x0, ret: -512, elapsed time: 2632132us
 ```
+
+### qemu-aarch64-static-fast
+Help you to run ARM64 binaries faster on x86_64 machines.

@@ -1,0 +1,27 @@
+# Contributor: Avi Kivity
+# Maintainer: Malachi Xu <w568w at outlook dot com>
+pkgname=qemu-aarch64-static-fast
+pkgver=1.0
+pkgrel=1
+pkgdesc="Speed up qemu-aarch64-static"
+arch=('any')
+url="https://github.com/avikivity/qemu-aarch64-static-fast"
+depends=('qemu-user-static')
+
+source=(
+    "qemu-aarch64-static-fast.c"
+    "qemu-aarch64-static-fast.conf"
+)
+sha256sums=('d95c8cf54aadbea15470b95c2f257037863d0f290a452ef9c3f006ef670de96b'
+            'd1ee4197a45d2c1346b8748d3f0c01e546a78493a32d50d43a89783f8f74045f')
+
+build() {
+    cd "$srcdir"
+    gcc -o $pkgname -static $pkgname.c
+}
+
+package() {
+    cd "$srcdir"
+    install -Dm755 $pkgname "$pkgdir/usr/bin/$pkgname"
+    install -Dm644 $pkgname.conf "$pkgdir/usr/lib/binfmt.d/$pkgname.conf"
+}
