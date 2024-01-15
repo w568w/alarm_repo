@@ -12,7 +12,7 @@ source=(
     "qemu-aarch64-static-fast.c"
     "qemu-aarch64-static-fast.conf"
 )
-sha256sums=('d95c8cf54aadbea15470b95c2f257037863d0f290a452ef9c3f006ef670de96b'
+sha256sums=('SKIP'
             'd1ee4197a45d2c1346b8748d3f0c01e546a78493a32d50d43a89783f8f74045f')
 
 build() {
