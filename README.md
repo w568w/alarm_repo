@@ -59,7 +59,7 @@ RKNPU driver is migrated by myself from downstream kernels [rockchip-linux/kerne
 [    2.507392] RKNPU fde40000.npu: avs=0
 ```
 
-(2) ~~Only tasks submitted after the first initialization of RKNN Runtime can be executed. Once the runtime is created again, the NPU is likely not to work anymore until machine reboot.~~ **Fixed by disabling RKNPU MMU(Meory Management Unit) in device tree.**
+(2) ~~Only tasks submitted after the first initialization of RKNN Runtime can be executed. Once the runtime is created again, the NPU is likely not to work anymore until machine reboot.~~ **Fixed by disabling RKNPU MMU (Memory Management Unit) in device tree.**
 
 <del>
 <pre>
