@@ -6,7 +6,7 @@ _desc="Linux Kernel for OrangePi 3B (Only for development, not for production us
 
 pkgbase=linux-orangepi-3b-dev
 pkgname=("${pkgbase}" "${pkgbase}-headers")
-pkgver=6.6.14
+pkgver=6.6.15
 pkgrel=1
 arch=('aarch64')
 url="http://www.kernel.org/"
