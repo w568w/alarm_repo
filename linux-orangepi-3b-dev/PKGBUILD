@@ -1,0 +1,178 @@
+# Contributor: SUISHUI
+# Maintainer: Malachi Xu <w568w at outlook dot com>
+# Maintainer: 7Ji <pugokushin@gmail.com>
+
+_desc="Linux Kernel for OrangePi 3B (Only for development, not for production use)"
+
+pkgbase=linux-orangepi-3b-dev
+pkgname=("${pkgbase}" "${pkgbase}-headers")
+pkgver=6.6.14
+pkgrel=1
+arch=('aarch64')
+url="http://www.kernel.org/"
+license=('GPL2')
+makedepends=('kmod' 'bc' 'dtc' 'uboot-tools' 'cpio' 'clang')
+options=('!strip')
+_srcname="linux-${pkgver}"
+source=(
+  "https://cdn.kernel.org/pub/linux/kernel/v6.x/${_srcname}.tar.xz"
+  '1001-arm64-dts-rockchip-add-opi3b.patch'
+  '1002-net-wireless-uwe5622-driver.patch'
+  '1003-rknpu.patch'
+  'config'
+  'linux.preset'
+)
+sha256sums=('SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP')
+
+prepare() {
+  cd "${_srcname}"
+
+  local _patch
+  for _patch in \
+    1001-arm64-dts-rockchip-add-opi3b \
+    1002-net-wireless-uwe5622-driver \
+    1003-rknpu
+  do
+    echo "Applying patch ${_patch}"
+    patch -N -p1 < "../${_patch}.patch"
+  done
+
+  echo "Setting version..."
+  echo "-$pkgrel" > localversion.10-pkgrel
+  echo "${pkgbase#linux}" > localversion.20-pkgname
+
+  # Prepare the configuration file
+  cat "${srcdir}/config" > '.config'
+}
+
+build() {
+  cd ${_srcname}
+
+  # get kernel version, which will be used later for modules
+  make olddefconfig prepare
+  make -s kernelrelease > version
+
+  # Host LDFLAGS or other LDFLAGS set by makepkg/user is not helpful for building kernel: it should links nothing outside of itself
+  unset LDFLAGS
+  # Only need normal Image, as most Amlogic devices does not need/support Image.gz
+  # Image and modules are built in the same run to make sure they're compatible with each other
+  # -@ enables symbols in dtbs, so overlay is possible
+  make ${MAKEFLAGS} DTC_FLAGS="-@" Image modules dtbs
+}
+
+_package() {
+  pkgdesc="The Linux Kernel and modules - ${_desc}"
+  depends=('coreutils' 'kmod' 'initramfs')
+  optdepends=(
+    'wireless-regdb: to set the correct wireless channels of your country'
+    'linux-firmware: firmware images needed for some devices'
+  )
+  backup=("etc/mkinitcpio.d/${pkgbase}.preset")
+
+  cd "${_srcname}"
+
+  # Install modules
+  echo "Installing modules..."
+  make INSTALL_MOD_PATH="${pkgdir}/usr" INSTALL_MOD_STRIP=1 modules_install
+
+  # Install pkgbase
+  local _dir_module="${pkgdir}/usr/lib/modules/$(<version)"
+  echo "${pkgbase}" | install -D -m 644 /dev/stdin "${_dir_module}/pkgbase"
+
+  # Install kernel image
+  install -Dm644 arch/arm64/boot/Image "${_dir_module}/vmlinuz"
+
+  # Remove build and source links, which points to folders used when building (i.e. dead links)
+  rm -f "${_dir_module}/"{build,source}
+
+  # install mkinitcpio preset file
+  sed "s|%PKGBASE%|${pkgbase}|g" ../linux.preset |
+    install -Dm644 /dev/stdin "${pkgdir}/etc/mkinitcpio.d/${pkgbase}.preset"
+
+  # Install DTB
+  echo 'Installing DTB for OrangePi 3B...'
+  local _dtb='rockchip/rk3566-orangepi-3b.dtb'
+  install -Dm644 "arch/arm64/boot/dts/${_dtb}" "${pkgdir}/boot/dtbs/${pkgbase}/${_dtb}"
+}
+
+_package-headers() {
+  pkgdesc="Header files and scripts for building modules for linux kernel - ${_desc}"
+
+  cd ${_srcname}
+  local _builddir="${pkgdir}/usr/lib/modules/$(<version)/build"
+
+  install -Dt "${_builddir}" -m644 Makefile .config Module.symvers
+  install -Dt "${_builddir}/kernel" -m644 kernel/Makefile
+
+  mkdir "${_builddir}/.tmp_versions"
+
+  cp -t "${_builddir}" -a include scripts
+
+  install -Dt "${_builddir}/arch/arm64" -m644 arch/arm64/Makefile
+  install -Dt "${_builddir}/arch/arm64/kernel" -m644 arch/arm64/kernel/asm-offsets.s
+  install -Dt "${_builddir}" -m644 vmlinux
+
+  cp -t "${_builddir}/arch/arm64" -a arch/arm64/include
+  mkdir -p "${_builddir}/arch/arm"
+  cp -t "${_builddir}/arch/arm" -a arch/arm/include
+
+  install -Dt "${_builddir}/drivers/md" -m644 drivers/md/*.h
+  install -Dt "${_builddir}/net/mac80211" -m644 net/mac80211/*.h
+
+  # http://bugs.archlinux.org/task/13146
+  install -Dt "${_builddir}/drivers/media/i2c" -m644 drivers/media/i2c/msp3400-driver.h
+
+  # http://bugs.archlinux.org/task/20402
+  install -Dt "${_builddir}/drivers/media/usb/dvb-usb" -m644 drivers/media/usb/dvb-usb/*.h
+  install -Dt "${_builddir}/drivers/media/dvb-frontends" -m644 drivers/media/dvb-frontends/*.h
+  install -Dt "${_builddir}/drivers/media/tuners" -m644 drivers/media/tuners/*.h
+
+  # add xfs and shmem for aufs building
+  mkdir -p "${_builddir}"/{fs/xfs,mm}
+
+  # copy in Kconfig files
+  find . -name Kconfig\* -exec install -Dm644 {} "${_builddir}/{}" \;
+
+  # remove unneeded architectures
+  local _arch
+  for _arch in "${_builddir}"/arch/*/; do
+    [[ ${_arch} == */arm64/ || ${_arch} == */arm/ ]] && continue
+    rm -r "${_arch}"
+  done
+
+  # remove documentation files
+  rm -r "${_builddir}/Documentation"
+
+  # remove now broken symlinks
+  find -L "${_builddir}" -type l -printf 'Removing %P\n' -delete
+
+  # strip scripts directory
+  local file
+  while read -rd '' file; do
+    case "$(file -bi "$file")" in
+    application/x-sharedlib\;*) # Libraries (.so)
+      strip $STRIP_SHARED "$file" ;;
+    application/x-archive\;*) # Libraries (.a)
+      strip $STRIP_STATIC "$file" ;;
+    application/x-executable\;*) # Binaries
+      strip $STRIP_BINARIES "$file" ;;
+    application/x-pie-executable\;*) # Relocatable binaries
+      strip $STRIP_SHARED "$file" ;;
+    esac
+  done < <(find "${_builddir}" -type f -perm -u+x ! -name vmlinux -print0 2>/dev/null)
+  strip $STRIP_STATIC "${_builddir}/vmlinux"
+
+  # remove unwanted files
+  find ${_builddir} -name '*.orig' -delete
+}
+
+for _p in ${pkgname[@]}; do
+  eval "package_${_p}() {
+    _package${_p#${pkgbase}}
+  }"
+done
