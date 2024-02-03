@@ -35,7 +35,7 @@ Compared with upstream kernel, it is patched with following features:
 
 1. Add **device tree** for Orangepi 3B
 2. Add **WiFi** driver for UWE5622
-3. Add **NPU** driver for RK3566 (**see notes below!**)
+3. Add **NPU** driver v0.9.3 for RK3566 (**see notes below!**)
 
 [Panfrost](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/gpu/drm/panfrost/) kernel module is included and enabled by default. So you can use it with [Mesa 3D](https://docs.mesa3d.org/drivers/panfrost.html) to enjoy **OpenGL ES and OpenCL on your GPU** too.
 
@@ -49,27 +49,35 @@ $ makepkg --syncdeps --config makepkg.conf
 RKNPU driver is migrated by myself from downstream kernels [rockchip-linux/kernel](https://github.com/rockchip-linux/kernel/tree/develop-5.10) and [orangepi-xunlong/linux-orangepi](https://github.com/orangepi-xunlong/linux-orangepi/blob/orange-pi-5.10-rk35xx/). A lot of changes and polyfills are made to make it work properly. **It is quite experimental and may not work on your device; you have been warned.** 
 
 ##### Known Problems of RKNPU
-(1) In my case, power model is not working but it does not affect the functionality of NPU:
+(1) In my case, power model is not working but it does NOT affect the functionality of NPU:
 
 ```
-[   23.948577] RKNPU fde40000.npu: deferred probe timeout, ignoring dependency
-[   23.950313] RKNPU fde40000.npu: RKNPU: rknpu iommu is enabled, using iommu mode
-[   23.954131] [drm] Initialized rknpu 0.8.2 20220829 for fde40000.npu on minor 2
-[   23.955842] RKNPU fde40000.npu: Failed to get npu_leakage
-[   23.960750] RKNPU fde40000.npu: avs=0
-[   23.961574] RKNPU fde40000.npu: RKNPU: failed to initialize power model
-[   23.961587] RKNPU fde40000.npu: RKNPU: failed to get dynamic-coefficient
+[    2.501015] RKNPU fde40000.npu: RKNPU: rknpu iommu is disabled, using non-iommu mode
+[    2.503000] [drm] Initialized rknpu 0.9.3 20231121 for fde40000.npu on minor 1
+[    2.503800] RKNPU fde40000.npu: bin=0
+[    2.504027] RKNPU fde40000.npu: Failed to get leakage
+[    2.507392] RKNPU fde40000.npu: avs=0
 ```
 
-(2) Only tasks submitted after the first initialization of RKNN Runtime can be executed. **Once the runtime is created again, the NPU is likely not to work anymore until reboot.**
+(2) ~~Only tasks submitted after the first initialization of RKNN Runtime can be executed. Once the runtime is created again, the NPU is likely not to work anymore until machine reboot.~~ **Fixed by disabling RKNPU MMU(Meory Management Unit) in device tree.**
 
-```
+<del>
+<pre>
 [  605.159276] RKNPU: failed to wait job, task counter: 0, flags: 0x5, ret = 0, elapsed time: 6160643us
 [  605.267268] RKNPU: job timeout, flags: 0x0, irq status: 0x0, raw status: 0x0, require mask: 0x300, task counter: 0x0, elapsed time: 6268640us
 [  605.375257] RKNPU: soft reset
 [  607.915608] RKNPU: failed to wait job, task counter: 0, flags: 0x5, ret = -512, elapsed time: 2524485us
 [  608.023253] RKNPU: job abort, flags: 0x0, ret: -512, elapsed time: 2632132us
+</pre>
+</del>
+
+(3) WLAN driver for UWE5622 prints a lot of errors and stack traces in dmesg, but it does NOT affect the functionality of network adapter:
+
+```
+[   18.181010] sprdwl:sprdwl_rx_skb_process, drop loopback pkt, macaddr:24:b7:2a:a7:af:e9
+[   19.206465] sprdwl:sprdwl_rx_skb_process, drop loopback pkt, macaddr:24:b7:2a:a7:af:e9
+[   19.220338] sprdwl:sprdwl_rx_skb_process, drop loopback pkt, macaddr:24:b7:2a:a7:af:e9
 ```
 
-### qemu-aarch64-static-fast
-Help you to run ARM64 binaries faster on x86_64 machines.
+### linux-orangepi-3b-dev
+My edge branch of linux-orangepi-3b. It is used for testing new features and patches, and may be unstable or even unbootable. **Use it at your own risk.**

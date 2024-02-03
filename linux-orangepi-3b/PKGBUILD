@@ -6,7 +6,7 @@ _desc="AArch64 for OrangePi 3B"
 
 pkgbase=linux-orangepi-3b
 pkgname=("${pkgbase}" "${pkgbase}-headers")
-pkgver=6.6.11
+pkgver=6.6.14
 pkgrel=1
 arch=('aarch64')
 url="http://www.kernel.org/"
@@ -22,10 +22,10 @@ source=(
   'config'
   'linux.preset'
 )
-sha256sums=('afe2e5a661bb886d762684ebea71607d1ee8cb9dd100279d2810ba20d9671e52'
+sha256sums=('fbe96b2db3f962cd2a96a849d554300e7a4555995160082d4f323c2a1dfa1584'
             'db6945ddc11df05cb5374bec2d30b5eaed117a8964bdf81a489b34c9b9a0d237'
             '7c4c7a29c9aff64297c7e7a0d4189ea858d9a8fa94b807d1d0329bcf296286a8'
-            '4a5e6ad618e87588e27564e608fe9dc8cabe57598dd5c4670c86e7cc1faf74c8'
+            'dfc9e9f76bc6d03e555d67c0005a6b08f617276028e2ea7e7d5ca1f542481611'
             'e5dda111f1b047935ea28dff16b375e00ea9261a285d2e65671b305049a4a437'
             'bdcd6cbf19284b60fac6d6772f1e0ec2e2fe03ce7fe3d7d16844dd6d2b5711f3')
 
