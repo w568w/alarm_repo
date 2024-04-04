@@ -4,7 +4,7 @@
 
 _desc="AArch64 for OrangePi 3B"
 
-pkgbase=linux-orangepi-3b
+pkgbase=linux-aarch64-rockchip-opi3b-npu-w568w
 pkgname=("${pkgbase}" "${pkgbase}-headers")
 pkgver=6.6.15
 pkgrel=1
@@ -39,7 +39,7 @@ prepare() {
     1003-rknpu
   do
     echo "Applying patch ${_patch}"
-    patch -N -p1 < "../${_patch}.patch"
+    patch --forward --strip=1 < "../${_patch}.patch"
   done
 
   echo "Setting version..."
@@ -55,7 +55,7 @@ build() {
 
   # get kernel version, which will be used later for modules
   make olddefconfig prepare
-  make -s kernelrelease > version
+  make --quiet kernelrelease > version
 
   # Host LDFLAGS or other LDFLAGS set by makepkg/user is not helpful for building kernel: it should links nothing outside of itself
   unset LDFLAGS
@@ -82,7 +82,7 @@ _package() {
 
   # Install pkgbase
   local _dir_module="${pkgdir}/usr/lib/modules/$(<version)"
-  echo "${pkgbase}" | install -D -m 644 /dev/stdin "${_dir_module}/pkgbase"
+  echo "${pkgbase}" | install -Dm644 /dev/stdin "${_dir_module}/pkgbase"
 
   # Install kernel image
   install -Dm644 arch/arm64/boot/Image "${_dir_module}/vmlinuz"
@@ -133,7 +133,7 @@ _package-headers() {
   install -Dt "${_builddir}/drivers/media/tuners" -m644 drivers/media/tuners/*.h
 
   # add xfs and shmem for aufs building
-  mkdir -p "${_builddir}"/{fs/xfs,mm}
+  mkdir --parents "${_builddir}"/{fs/xfs,mm}
 
   # copy in Kconfig files
   find . -name Kconfig\* -exec install -Dm644 {} "${_builddir}/{}" \;
@@ -146,7 +146,7 @@ _package-headers() {
   done
 
   # remove documentation files
-  rm -r "${_builddir}/Documentation"
+  rm --recursive "${_builddir}/Documentation"
 
   # remove now broken symlinks
   find -L "${_builddir}" -type l -printf 'Removing %P\n' -delete

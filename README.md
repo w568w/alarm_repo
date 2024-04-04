@@ -2,53 +2,59 @@
 Some personally maintained packages that are unsuitable for AUR will be hosted here.
 
 ## Packages
-### libmali-bifrost-g52-g13p0-x11-gbm
+### 1. libmali-bifrost-g52-g13p0-x11-gbm
 A closed-source Bifrost Mali driver (userspace part) for Mali G52.
 
 It provides OpenCL and OpenGL ES support on Orangepi 3B.
 
 Repacked from <https://github.com/orangepi-xunlong/rk-rootfs-build/>.
 
-#### Notes
-To utilize this GPU, you have to choose only one of the following options:
+> **Note: How to use Mali G52?**
+>
+> To utilize the GPU, you have to choose one of the following options:
+> 
+> 1. Open-sourced upstream solution:
+>    - Kernel modules: Panfrost ([need to be enabled](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/gpu/drm/panfrost/Kconfig) in mainline kernel, **NOT** in OrangePi OS)
+>    - Userspace: [Mesa with Panfrost support](https://docs.mesa3d.org/drivers/panfrost.html) (just `pacman -S mesa` may work)
+> 2. Closed-sourced downstream solution:
+>    - Kernel modules: Mali GPU kernel modules (already built in OrangePi OS, **NOT** in mainline kernel)
+>    - Userspace: **This package** (just `makepkg -si` it)
+>
+> `linux-aarch64-rockchip-opi3b-npu-w568w` in this repository has Panfrost enabled.
+>
+> See [OpenSUSE Wiki](https://en.opensuse.org/ARM_Mali_GPU) for more information.
 
-1. Open-sourced upstream software:
-    - Kernel modules: Panfrost ([need to be enabled](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/gpu/drm/panfrost/Kconfig) in mainline kernel, **NOT** in OrangePi OS)
-    - Userspace: [Mesa with Panfrost support](https://docs.mesa3d.org/drivers/panfrost.html) (just `pacman -S mesa` may work)
-2. Closed-sourced software:
-    - Kernel modules: Mali GPU kernel modules (already built in OrangePi OS, **NOT** in mainline kernel)
-    - Userspace: **This package** (just `makepkg -si` it)
-
-`linux-orangepi-3b` in this repository has Panfrost enabled.
-
-See [OpenSUSE Wiki](https://en.opensuse.org/ARM_Mali_GPU) for more information.
-
-### linux-orangepi-3b
+### 2. linux-aarch64-rockchip-opi3b-npu-w568w
 The Linux kernel and modules with my own patches for Orangepi 3B. Adapted from (and would be synced with) [@SUISHUI's repository](https://github.com/SUISHUI/linux-orangepi-3b).
+
+> **Note: Why the kernel name is so long?**
+> 
+> The name follows [@7Ji's Kernel Package Guidelines](https://github.com/7Ji-PKGBUILDs/.meta/blob/main/PackageGuidelines.md#kernel-package-guidelines).
 
 It should be kept up-to-date with upstream kernel, rather than full of patches and dirty hacks, or even diverged from upstream (**saying you, [Rockchip](https://github.com/rockchip-linux/kernel/tree/develop-5.10) and [Xunlong](https://github.com/orangepi-xunlong/linux-orangepi/blob/orange-pi-5.10-rk35xx/)!**)
 
 #### Features
 It can be a drop-in replacement of the default kernel (usually called `linux-rk3566-legacy`) in OrangePi OS (based on Archlinux ARM).
 
-Compared with upstream kernel, it is patched with following features:
+It is patched with following features:
 
 1. Add **device tree** for Orangepi 3B
 2. Add **WiFi** driver for UWE5622
 3. Add **NPU** driver v0.9.3 for RK3566 (**see notes below!**)
 
-[Panfrost](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/gpu/drm/panfrost/) kernel module is included and enabled by default. So you can use it with [Mesa 3D](https://docs.mesa3d.org/drivers/panfrost.html) to enjoy **OpenGL ES and OpenCL on your GPU** too.
+[Panfrost](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/gpu/drm/panfrost/) kernel module is included and enabled by default. So you can use it with [Mesa 3D](https://docs.mesa3d.org/drivers/panfrost.html) to enjoy **OpenGL ES and OpenCL with your GPU** too.
 
-#### Notes 
-You may want to cross-build it on a x86_64 machine with following options:
+RKNPU driver is migrated by myself from downstream kernels [rockchip-linux/kernel](https://github.com/rockchip-linux/kernel/tree/develop-5.10) and [orangepi-xunlong/linux-orangepi](https://github.com/orangepi-xunlong/linux-orangepi/blob/orange-pi-5.10-rk35xx/). 
 
-```sh
-$ makepkg --syncdeps --config makepkg.conf
-```
+> **Warning** 
+> 
+> A lot of changes and polyfills are made to make the NPU driver work properly. **It is quite experimental and may not work on your device; you have been warned.** 
 
-RKNPU driver is migrated by myself from downstream kernels [rockchip-linux/kernel](https://github.com/rockchip-linux/kernel/tree/develop-5.10) and [orangepi-xunlong/linux-orangepi](https://github.com/orangepi-xunlong/linux-orangepi/blob/orange-pi-5.10-rk35xx/). A lot of changes and polyfills are made to make it work properly. **It is quite experimental and may not work on your device; you have been warned.** 
+> **See Also** 
+> 
+> Keep an eye on [Tomeu Vizoso's blog](https://blog.tomeuvizoso.net/) as he is working towards a fully open-source NPU driver for rockchip devices by reverse engineering.
 
-##### Known Problems of RKNPU
+#### Known Problems of the Kernel
 (1) In my case, power model is not working but it does NOT affect the functionality of NPU:
 
 ```
@@ -59,7 +65,7 @@ RKNPU driver is migrated by myself from downstream kernels [rockchip-linux/kerne
 [    2.507392] RKNPU fde40000.npu: avs=0
 ```
 
-(2) ~~Only tasks submitted after the first initialization of RKNN Runtime can be executed. Once the runtime is created again, the NPU is likely not to work anymore until machine reboot.~~ **Fixed by disabling RKNPU MMU (Memory Management Unit) in device tree.**
+(2) ~~Only tasks submitted after the first initialization of RKNN Runtime can be executed. Once the runtime is created again, the NPU is likely not to work anymore until machine reboot.~~ **Solved by disabling RKNPU MMU (Memory Management Unit) in device tree.** Do not know the root cause yet.
 
 <del>
 <pre>
@@ -79,5 +85,14 @@ RKNPU driver is migrated by myself from downstream kernels [rockchip-linux/kerne
 [   19.220338] sprdwl:sprdwl_rx_skb_process, drop loopback pkt, macaddr:24:b7:2a:a7:af:e9
 ```
 
-### linux-orangepi-3b-dev
-My edge branch of linux-orangepi-3b. It is used for testing new features and patches, and may be unstable or even unbootable. **Use it at your own risk.**
+### 3. linux-orangepi-3b-dev
+My edge branch of linux-aarch64-rockchip-opi3b-npu-w568w. It is used for testing new features and patches, and may be unstable or even unbootable. **Use it at your own risk.**
+
+> **Notes**
+>
+> You may want to cross-build it on a x86_64 machine with following options:
+> 
+> ```sh
+> $ makepkg --syncdeps --config makepkg.conf
+> ```
+>
