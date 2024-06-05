@@ -6,7 +6,7 @@ _desc="Linux Kernel for OrangePi 3B (Only for development, not for production us
 
 pkgbase=linux-orangepi-3b-dev
 pkgname=("${pkgbase}" "${pkgbase}-headers")
-pkgver=6.6.15
+pkgver=6.9.3
 pkgrel=1
 arch=('aarch64')
 url="http://www.kernel.org/"
@@ -16,13 +16,15 @@ options=('!strip')
 _srcname="linux-${pkgver}"
 source=(
   "https://cdn.kernel.org/pub/linux/kernel/v6.x/${_srcname}.tar.xz"
-  '1001-arm64-dts-rockchip-add-opi3b.patch'
-  '1002-net-wireless-uwe5622-driver.patch'
-  '1003-rknpu.patch'
+  '0001-arm64-dts-add-orangepi-3b.patch'
+  '0002-net-wireless-uwe5622-driver.patch'
+  '0003-rknpu-add-rknpu-driver.patch'
+  '0004-misc-opi3b-upgrade-uwe5622-driver-and-rockchip-drive.patch'
   'config'
   'linux.preset'
 )
 sha256sums=('SKIP'
+            'SKIP'
             'SKIP'
             'SKIP'
             'SKIP'
@@ -34,9 +36,10 @@ prepare() {
 
   local _patch
   for _patch in \
-    1001-arm64-dts-rockchip-add-opi3b \
-    1002-net-wireless-uwe5622-driver \
-    1003-rknpu
+    0001-arm64-dts-add-orangepi-3b \
+    0002-net-wireless-uwe5622-driver \
+    0003-rknpu-add-rknpu-driver \
+    0004-misc-opi3b-upgrade-uwe5622-driver-and-rockchip-drive
   do
     echo "Applying patch ${_patch}"
     patch -N -p1 < "../${_patch}.patch"

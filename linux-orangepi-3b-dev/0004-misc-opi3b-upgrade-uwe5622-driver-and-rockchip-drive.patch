@@ -1,0 +1,138 @@
+From f17f1580a61b19b7668adb56239b7e561f4bf085 Mon Sep 17 00:00:00 2001
+From: w568w <1278297578@qq.com>
+Date: Wed, 5 Jun 2024 11:20:03 +0800
+Subject: [PATCH 4/4] misc(opi3b): upgrade uwe5622 driver and rockchip driver
+ to 6.9
+
+---
+ drivers/net/wireless/uwe5622/tty-sdio/tty.c            |  1 +
+ .../net/wireless/uwe5622/unisocwcn/sdio/sdiohal_main.c |  1 +
+ drivers/net/wireless/uwe5622/unisocwifi/cfg80211.c     |  4 +++-
+ drivers/net/wireless/uwe5622/unisocwifi/cmdevt.c       |  2 +-
+ drivers/net/wireless/uwe5622/unisocwifi/version.h      |  2 +-
+ drivers/soc/rockchip/rockchip_opp_select.c             | 10 +++++-----
+ 6 files changed, 12 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/uwe5622/tty-sdio/tty.c b/drivers/net/wireless/uwe5622/tty-sdio/tty.c
+index 8aacd3fd0..244b6c926 100755
+--- a/drivers/net/wireless/uwe5622/tty-sdio/tty.c
++++ b/drivers/net/wireless/uwe5622/tty-sdio/tty.c
+@@ -27,6 +27,7 @@
+ #include <linux/atomic.h>
+ #ifdef CONFIG_OF
+ #include <linux/of_device.h>
++#include <linux/of.h>
+ #endif
+ #include <linux/compat.h>
+ #include <linux/tty_flip.h>
+diff --git a/drivers/net/wireless/uwe5622/unisocwcn/sdio/sdiohal_main.c b/drivers/net/wireless/uwe5622/unisocwcn/sdio/sdiohal_main.c
+index a10b7909e..974c1f8d0 100755
+--- a/drivers/net/wireless/uwe5622/unisocwcn/sdio/sdiohal_main.c
++++ b/drivers/net/wireless/uwe5622/unisocwcn/sdio/sdiohal_main.c
+@@ -23,6 +23,7 @@
+ #include <linux/module.h>
+ #include <linux/of_device.h>
+ #include <linux/of_gpio.h>
++#include <linux/of_platform.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/mmc/card.h>
+ #include <linux/mmc/core.h>
+diff --git a/drivers/net/wireless/uwe5622/unisocwifi/cfg80211.c b/drivers/net/wireless/uwe5622/unisocwifi/cfg80211.c
+index 1d09976fc..06c53d3a7 100755
+--- a/drivers/net/wireless/uwe5622/unisocwifi/cfg80211.c
++++ b/drivers/net/wireless/uwe5622/unisocwifi/cfg80211.c
+@@ -23,6 +23,7 @@
+  * GNU General Public License for more details.
+  */
+ 
++#include "net/cfg80211.h"
+ #include "sprdwl.h"
+ #include "cfg80211.h"
+ #include "cmdevt.h"
+@@ -964,9 +965,10 @@ static int sprdwl_cfg80211_start_ap(struct wiphy *wiphy,
+ 
+ static int sprdwl_cfg80211_change_beacon(struct wiphy *wiphy,
+ 					 struct net_device *ndev,
+-					 struct cfg80211_beacon_data *beacon)
++					 struct cfg80211_ap_update *info)
+ {
+ 	struct sprdwl_vif *vif = netdev_priv(ndev);
++	struct cfg80211_beacon_data *beacon = &info->beacon;
+ 
+ 	wl_ndev_log(L_DBG, ndev, "%s\n", __func__);
+ #ifdef DFS_MASTER
+diff --git a/drivers/net/wireless/uwe5622/unisocwifi/cmdevt.c b/drivers/net/wireless/uwe5622/unisocwifi/cmdevt.c
+index 779619908..cccfe7793 100755
+--- a/drivers/net/wireless/uwe5622/unisocwifi/cmdevt.c
++++ b/drivers/net/wireless/uwe5622/unisocwifi/cmdevt.c
+@@ -3301,7 +3301,7 @@ void sprdwl_event_chan_changed(struct sprdwl_vif *vif, u8 *data, u16 len)
+ 						NL80211_CHAN_HT20);
+ 		else
+ 			wl_err("%s, ch is null!\n", __func__);
+-		cfg80211_ch_switch_notify(vif->ndev, &chandef, 0, 0);
++		cfg80211_ch_switch_notify(vif->ndev, &chandef, 0);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/uwe5622/unisocwifi/version.h b/drivers/net/wireless/uwe5622/unisocwifi/version.h
+index 668bdd50a..d206bc1e4 100755
+--- a/drivers/net/wireless/uwe5622/unisocwifi/version.h
++++ b/drivers/net/wireless/uwe5622/unisocwifi/version.h
+@@ -32,7 +32,7 @@
+ #endif
+ 
+ struct sprdwl_ver {
+-	char kernel_ver[8];
++	char kernel_ver[64];
+ 	char drv_ver[8];
+ 	char update[8];
+ 	char reserve[8];
+diff --git a/drivers/soc/rockchip/rockchip_opp_select.c b/drivers/soc/rockchip/rockchip_opp_select.c
+index 9e3b93fa7..0ddfb96a6 100644
+--- a/drivers/soc/rockchip/rockchip_opp_select.c
++++ b/drivers/soc/rockchip/rockchip_opp_select.c
+@@ -332,7 +332,7 @@ static int rockchip_parse_pvtm_config(struct device_node *np,
+ 	pvtm->tz = thermal_zone_get_zone_by_name(pvtm->tz_name);
+ 	if (IS_ERR(pvtm->tz))
+ 		return -EINVAL;
+-	if (!pvtm->tz->ops->get_temp)
++	if (!pvtm->tz->ops.get_temp)
+ 		return -EINVAL;
+ 	if (of_property_read_bool(np, "rockchip,pvtm-pvtpll")) {
+ 		if (of_property_read_u32(np, "rockchip,pvtm-offset",
+@@ -429,7 +429,7 @@ static int rockchip_get_pvtm_specific_value(struct device *dev,
+ 	 * As pvtm is influenced by temperature, compute difference between
+ 	 * current temperature and reference temperature
+ 	 */
+-	pvtm->tz->ops->get_temp(pvtm->tz, &cur_temp);
++	pvtm->tz->ops.get_temp(pvtm->tz, &cur_temp);
+ 	diff_temp = (cur_temp / 1000 - pvtm->ref_temp);
+ 	diff_value = diff_temp *
+ 		(diff_temp < 0 ? pvtm->temp_prop[0] : pvtm->temp_prop[1]);
+@@ -1107,7 +1107,7 @@ static int rockchip_get_pvtm_pvtpll(struct device *dev, struct device_node *np,
+ 		dev_err(dev, "failed to get pvtm from 0x%x\n", pvtm->offset);
+ 		goto resetore_volt;
+ 	}
+-	pvtm->tz->ops->get_temp(pvtm->tz, &cur_temp);
++	pvtm->tz->ops.get_temp(pvtm->tz, &cur_temp);
+ 	diff_temp = (cur_temp / 1000 - pvtm->ref_temp);
+ 	if (diff_temp < 0)
+ 		prop_temp = pvtm->temp_prop[0];
+@@ -2287,12 +2287,12 @@ int rockchip_opp_config_clks(struct device *dev, struct opp_table *opp_table,
+ 		return ret;
+ 	}
+ 
+-	dev_dbg(dev, "%lu -> %lu (Hz)\n", opp_table->rate_clk_single, *target);
++	dev_dbg(dev, "%lu -> %lu (Hz)\n", opp_table->current_rate_single_clk, *target);
+ 	ret = clk_set_rate(opp_table->clk, *target);
+ 	if (ret)
+ 		dev_err(dev, "failed to set clock rate: %lu\n", *target);
+ 	else
+-		opp_table->rate_clk_single = *target;
++		opp_table->current_rate_single_clk = *target;
+ 
+ 	clk_bulk_disable_unprepare(info->nclocks, info->clocks);
+ 
+-- 
+2.45.2
+
